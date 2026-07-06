@@ -16,7 +16,20 @@
   const exportJsonBtn = document.getElementById('export-json-btn'); // 导出json
   const importFileInput = document.getElementById('import-file'); // 导入json
 
-  // 初始化标签筛选下拉框
+  // 统一 ID 比较（localStorage / 导入 JSON 后 id 可能是 number 或 string）
+  function idsEqual(a, b) {
+    if (a === undefined || a === null || b === undefined || b === null) return false;
+    return String(a) === String(b);
+  }
+
+  function findTaskById(id) {
+    return tasks.find(t => idsEqual(t.id, id));
+  }
+
+  function findTaskIndexById(id) {
+    return tasks.findIndex(t => idsEqual(t.id, id));
+  }
+
   function initTagFilter() {
     const allTags = new Set();
     tasks.forEach(task => task.tags.forEach(tag => allTags.add(tag)));
@@ -67,7 +80,7 @@
     const tagFilter = filterTag.value;
 
     const filteredTasks = tasks.filter(task => {
-      const matchesKeyword = task.title.toLowerCase().includes(keyword) || 
+      const matchesKeyword = task.title.toLowerCase().includes(keyword) ||
                             (task.description && task.description.toLowerCase().includes(keyword));
       const matchesStatus = !statusFilter || task.status === statusFilter;
       const matchesPriority = !priorityFilter || task.priority === priorityFilter;
@@ -80,19 +93,19 @@
     filteredTasks.sort((a, b) => {
       const statusWeightA = getStatusWeight(a.status);
       const statusWeightB = getStatusWeight(b.status);
-      
+
       if (statusWeightA !== statusWeightB) {
         return statusWeightA - statusWeightB;
       }
-      
+
       // 相同状态下按计划结束日期升序，如果没有计划结束日期则按实际结束日期，如果没有实际结束日期则按计划开始日期
       const dateA = a.planEnd || a.actualEnd || a.planStart || '';
       const dateB = b.planEnd || b.actualEnd || b.planStart || '';
-      
+
       if (!dateA && !dateB) return 0;
       if (!dateA) return 1;
       if (!dateB) return -1;
-      
+
       return dateA.localeCompare(dateB);
     });
 
@@ -121,11 +134,11 @@
               <button class="edit-btn text-indigo-600 hover:text-indigo-800 text-sm whitespace-nowrap" data-id="${task.id}"><i class="fas fa-edit"></i> 编辑</button>
               <button class="delete-btn text-red-600 hover:text-red-800 text-sm whitespace-nowrap" data-id="${task.id}"><i class="fas fa-trash"></i> 删除</button>
             <button class="toggle-btn text-green-600 hover:text-green-800 text-sm" data-id="${task.id}">
-              <i class="fas fa-check-circle"></i> 
+              <i class="fas fa-check-circle"></i>
               ${
-                task.status === '已完成' ? '取消完成' : 
-                task.status === '待发布' ? '标记完成' : 
-                task.status === '进行中' ? '标记待发布' : 
+                task.status === '已完成' ? '取消完成' :
+                task.status === '待发布' ? '标记完成' :
+                task.status === '进行中' ? '标记待发布' :
                 task.status === '未开始' ? '开始任务' : '标记进行中'
               }
             </button>
@@ -154,17 +167,15 @@
   function bindTaskActions() {
     document.querySelectorAll('.edit-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        const id = parseInt(btn.dataset.id);
-        const task = tasks.find(t => t.id === id);
+        const task = findTaskById(btn.dataset.id);
         if (task) fillForm(task);
       });
     });
 
     document.querySelectorAll('.delete-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        const id = parseInt(btn.dataset.id);
         if (confirm('确认删除该任务？')) {
-          const index = tasks.findIndex(t => t.id === id);
+          const index = findTaskIndexById(btn.dataset.id);
           if (index !== -1) {
             tasks.splice(index, 1);
             saveAndRefresh();
@@ -175,8 +186,7 @@
 
     document.querySelectorAll('.toggle-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        const id = parseInt(btn.dataset.id);
-        const task = tasks.find(t => t.id === id);
+        const task = findTaskById(btn.dataset.id);
         if (task) {
           // 状态转换逻辑
           if (task.status === '未开始') {
@@ -214,7 +224,7 @@
 
     // 重置所有复选框
     document.querySelectorAll('.tag-checkbox').forEach(cb => cb.checked = false);
-    
+
     // 设置标签选中状态
     task.tags.forEach(tag => {
       const checkbox = document.querySelector(`.tag-checkbox[value="${tag}"]`);
@@ -248,17 +258,9 @@
       return;
     }
 
-    function getTaskId(id) {
-      let num = tasks.findIndex(parseInt(id));
-      alert("序号：" + num);
-    }
-
-
-    // // 根据实际完成时间自动判断状态
     let status = '未开始';
 
     const taskData = {
-      // id,
       title,
       description,
       priority,
@@ -274,43 +276,32 @@
     recalculateStatus(taskData);
 
     // 新增/修改任务
-    dealTask(id,taskData);
-
-    // if (id) {
-    //   // 编辑任务
-    //   const index = tasks.findIndex(t => t.id === parseInt(id));
-    //   if (index !== -1) {
-    //     taskData.id = parseInt(id);
-    //     tasks[index] = taskData;
-    //   }
-    // } else {
-    //   // 新增任务
-    //   taskData.id = Date.now();
-    //   tasks.push(taskData);
-    // }
+    if (!dealTask(id, taskData)) {
+      return;
+    }
 
     form.reset();
     document.getElementById('task-id').value = '';
     saveAndRefresh();
   });
-  
-  
-  // 任务处理。判断是添加任务还是更新任务
-  function dealTask(id,taskData) {
-    // getTaskId(id);
+
+
+  // 任务处理。判断是添加任务还是更新任务；成功返回 true
+  function dealTask(id, taskData) {
     if (id) {
-      // 编辑任务
-      const index = tasks.findIndex(t => t.id === parseInt(id));
+      const index = findTaskIndexById(id);
       if (index !== -1) {
-        taskData.id = parseInt(id);
+        taskData.id = tasks[index].id;
         tasks[index] = taskData;
+        return true;
       }
-    } else {
-      // 新增任务
-      taskData.id = Date.now();
-      tasks.push(taskData);
+      alert('未找到要编辑的任务，请重新选择');
+      return false;
     }
-  };
+    taskData.id = Date.now();
+    tasks.push(taskData);
+    return true;
+  }
 
   // 取消编辑
   cancelBtn.addEventListener('click', function() {
@@ -347,7 +338,7 @@
 
     // CSV 表头
     const headers = ['ID', '任务名称', '任务详情', '优先级', '状态', '计划开始', '计划结束', '实际开始', '实际结束', '标签'];
-    
+
     // 构建 CSV 内容
     const csvRows = [];
     csvRows.push(headers.join(','));
@@ -414,7 +405,7 @@
         }
 
         // 简单验证数据结构
-        const validTasks = importedTasks.filter(task => 
+        const validTasks = importedTasks.filter(task =>
           task && typeof task === 'object' && task.title
         );
 
@@ -425,17 +416,21 @@
 
         // 确认是否覆盖或追加
         const action = confirm(`发现 ${validTasks.length} 个有效任务。\n点击“确定”更新到现有列表，点击“取消”退出导入。`);
-        
+
         if (action) {
-          // 追加模式：重新生成ID以避免冲突
           validTasks.forEach(task => {
-            recalculateStatus(task); // 计算任务状态
-            dealTask(task.id,task);
-            // tasks.push(task);
+            recalculateStatus(task);
+            if (!task.id) {
+              task.id = Date.now() + Math.floor(Math.random() * 1000);
+            }
+            const index = findTaskIndexById(task.id);
+            if (index !== -1) {
+              tasks[index] = task;
+            } else {
+              tasks.push(task);
+            }
           });
           alert('导入成功！');
-        } else {
-          
         }
 
         saveAndRefresh();
