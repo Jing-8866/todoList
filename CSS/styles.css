@@ -1,0 +1,74 @@
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.tag-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  margin-right: 4px;
+  background-color: #e0e7ff;
+  color: #4f46e5;
+  border: 1px solid #c7d2fe;
+}
+
+.priority-high { background-color: #fed7d7; color: #c53030; }
+.priority-medium { background-color: #fefcbf; color: #b7791f; }
+.priority-low { background-color: #c6f6d5; color: #2f855a; }
+
+.status-not-started { background-color: transparent; }
+.status-completed { background-color: #dcfce7; }
+.status-in-progress { background-color: #fef9c3; }
+.status-publish { background-color: #b5b8ed; }
+.status-overdue { background-color: #fee2e2; }
+
+.task-card {
+  transition: all 0.2s ease;
+  border-left: 3px solid #e2e8f0;
+}
+
+.task-card.priority-high {
+  border-left-color: #f87171;
+}
+
+.task-card.priority-medium {
+  border-left-color: #fbbf24;
+}
+
+.task-card.priority-low {
+  border-left-color: #34d399;
+}
+
+.task-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.description-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #64748b;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+/* 自定义滚动条 */
+#tasks-container::-webkit-scrollbar {
+  width: 5px;
+}
+
+#tasks-container::-webkit-scrollbar-track {
+  background: #f8fafc;
+  border-radius: 8px;
+}
+
+#tasks-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 8px;
+}
+
+#tasks-container::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

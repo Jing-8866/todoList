@@ -1,0 +1,181 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>待办事项管理工具</title>
+  <!-- <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"> -->
+  <link href="CSS/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  
+  <!-- <link href="CSS/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="CSS/all.min.css"> -->
+  
+  <link rel="stylesheet" href="CSS/styles.css">
+</head>
+<!-- <body class="bg-gray-50 text-gray-800"> -->
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+  <div class="container mx-auto px-4 py-6">
+    <header class="text-center mb-6">
+      <h1 class="text-2xl font-bold text-indigo-600">📝 待办事项管理工具</h1>
+    </header>
+
+    <div class="flex flex-col lg:flex-row gap-5">
+      <!-- 左侧任务添加/编辑面板 -->
+      <section id="task-form" class="lg:w-5/12 bg-white p-5 rounded-lg shadow-sm">
+        <h2 class="text-lg font-semibold mb-3">添加 / 编辑任务</h2>
+        <form id="todo-form">
+          <input type="hidden" id="task-id">
+          <div class="mb-3">
+            <label class="block text-sm font-medium mb-1">任务名称 *</label>
+            <input type="text" id="task-title" class="w-full px-3 py-2 border rounded text-sm" required>
+          </div>
+          <div class="mb-3">
+            <label class="block text-sm font-medium mb-1">任务详情</label>
+            <textarea id="task-description" rows="2" class="w-full px-3 py-2 border rounded text-sm" placeholder="请输入任务详细描述..."></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="block text-sm font-medium mb-1">优先级</label>
+            <select id="task-priority" class="w-full px-3 py-2 border rounded text-sm">
+              <option value="低">低</option>
+              <option value="中">中</option>
+              <option value="高">高</option>
+            </select>
+          </div>
+          <div class="grid grid-cols-2 gap-3 mb-3">
+            <div>
+              <label class="block text-sm font-medium mb-1">计划开始日期</label>
+              <input type="date" id="plan-start" class="w-full px-3 py-2 border rounded text-sm">
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">计划结束日期</label>
+              <input type="date" id="plan-end" class="w-full px-3 py-2 border rounded text-sm">
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3 mb-3">
+            <div>
+              <label class="block text-sm font-medium mb-1">实际开始日期</label>
+              <input type="date" id="actual-start" class="w-full px-3 py-2 border rounded text-sm">
+            </div>
+            <div>
+              <label class="block text-sm font-medium mb-1">实际结束日期</label>
+              <input type="date" id="actual-end" class="w-full px-3 py-2 border rounded text-sm">
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="block text-sm font-medium mb-1">标签（可多选）</label>
+            <div class="flex flex-wrap gap-2" id="tag-checkboxes">
+              <label class="inline-flex items-center">
+                <input type="checkbox" value="维度" class="tag-checkbox"> 维度
+              </label>
+              <label class="inline-flex items-center">
+                <input type="checkbox" value="合并" class="tag-checkbox"> 合并
+              </label>
+              <label class="inline-flex items-center">
+                <input type="checkbox" value="集团经分" class="tag-checkbox"> 集团经分
+              </label>
+              <label class="inline-flex items-center">
+                <input type="checkbox" value="日报" class="tag-checkbox"> 日报
+              </label>
+              <label class="inline-flex items-center">
+                <input type="checkbox" value="研发分析" class="tag-checkbox"> 研发分析
+              </label>
+            </div>
+            <div class="mt-2">
+              <input type="text" id="new-tag" placeholder="自定义标签" class="px-3 py-1 border rounded text-sm">
+              <button type="button" id="add-tag-btn" class="ml-2 px-3 py-1 bg-indigo-500 text-white rounded text-sm hover:bg-indigo-600">添加</button>
+            </div>
+          </div>
+          <div class="flex justify-between">
+            <button type="button" id="cancel-btn" class="px-4 py-2 bg-gray-500 text-white rounded text-sm hover:bg-gray-600">取消</button>
+            <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700">保存任务</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- 右侧统计与任务展示面板 -->
+      <section class="lg:w-7/12 flex flex-col gap-5">
+
+        <!-- 数据统计面板 -->
+        <div id="stats" class="bg-white p-5 rounded-lg shadow-sm">
+          <div class="flex justify-between items-center mb-3">
+            <h2 class="text-lg font-semibold">📊 数据统计 &nbsp;&nbsp;<a class="text-xs text-gray-600"> 总任务数: <a id="total-count">0</a></a></h2>
+            <!-- 新增导入导出按钮区域 -->
+            <div class="space-x-2">
+              <label for="import-file" class="px-3 py-1 bg-purple-600 text-white rounded text-xs hover:bg-purple-700 transition cursor-pointer inline-block">
+                <i class="fas fa-file-import mr-1"></i>导入JSON
+              </label>
+              <input type="file" id="import-file" accept=".json" class="hidden">
+              <button id="export-csv-btn" class="px-3 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700 transition">
+                <i class="fas fa-file-csv mr-1"></i>导出CSV
+              </button>
+              <button id="export-json-btn" class="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition">
+                <i class="fas fa-file-code mr-1"></i>导出JSON
+              </button>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 md:grid-cols-5 gap-3 text-center">
+            <!-- <div class="p-3 bg-blue-50 rounded">
+              <p class="text-xl font-bold" id="total-count">0</p>
+              <p class="text-xs text-gray-600">总任务数</p>
+            </div> -->
+            <div class="p-3 bg-purple-50 rounded">
+              <p class="text-xl font-bold" id="not-started-count">0</p>
+              <p class="text-xs text-gray-600">未开始</p>
+            </div>
+            <div class="p-3 bg-yellow-50 rounded">
+              <p class="text-xl font-bold" id="in-progress-count">0</p>
+              <p class="text-xs text-gray-600">进行中</p>
+            </div>
+            <div class="p-3 bg-blue-50 rounded">
+              <p class="text-xl font-bold" id="publish-count">0</p>
+              <p class="text-xs text-gray-600">待发布</p>
+            </div>
+            <div class="p-3 bg-green-50 rounded">
+              <p class="text-xl font-bold" id="completed-count">0</p>
+              <p class="text-xs text-gray-600">已完成</p>
+            </div>
+            <div class="p-3 bg-red-50 rounded">
+              <p class="text-xl font-bold" id="overdue-count">0</p>
+              <p class="text-xs text-gray-600">已逾期</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 任务列表面板 -->
+        <div id="task-list" class="bg-white p-5 rounded-lg shadow-sm flex-1">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-3">
+            <h2 class="text-lg font-semibold mb-2 md:mb-0">📋 任务列表</h2>
+            <div class="flex flex-wrap gap-2">
+              <input type="text" id="search-input" placeholder="搜索任务..." class="px-3 py-1 border rounded text-sm">
+              <select id="filter-status" class="px-3 py-1 border rounded text-sm">
+                <option value="">全部状态</option>
+                <option value="未开始">未开始</option>
+                <option value="进行中">进行中</option>
+                <option value="待发布">待发布</option>
+                <option value="已完成">已完成</option>
+                <option value="已逾期">已逾期</option>
+              </select>
+              <select id="filter-priority" class="px-3 py-1 border rounded text-sm">
+                <option value="">全部优先级</option>
+                <option value="高">高</option>
+                <option value="中">中</option>
+                <option value="低">低</option>
+              </select>
+              <select id="filter-tag" class="px-3 py-1 border rounded text-sm">
+                <option value="">全部标签</option>
+              </select>
+            </div>
+          </div>
+          <div id="tasks-container" class="space-y-3 max-h-[calc(100vh-350px)] overflow-y-auto pr-2">
+            <!-- 动态渲染任务列表 -->
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script src="JS/app.js"></script>
+</body>
+</html>
