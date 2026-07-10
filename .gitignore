@@ -1,0 +1,22 @@
+# ==================================
+# Git Ignore - 通用规则
+# ==================================
+
+
+# IDE
+.idea/
+.venv/
+.vscode/
+.project
+.classpath
+.settings/
+
+# 日志
+*.log
+logs/
+
+
+
+# OS
+.DS_Store
+Thumbs.db
